@@ -1,6 +1,5 @@
-import java.util.List;
-import java.util.Scanner;
-import java.util.ArrayList;
+import java.util.*;
+import java.text.SimpleDateFormat;
 
 public class Main {
     public static void main(String[] args) {
@@ -21,7 +20,10 @@ public class Main {
             System.out.println("2. แสดงบัตรทั้งหมด");
             System.out.println("3. ตรวจสอบสิทธิ์เข้าห้อง");
             System.out.println("4. รายงานบัตรหาย");
-            System.out.println("5. ออกจากระบบ");
+            System.out.println("5. แสดงประวัติการใช้งานบัตรทั้งหมด");
+            System.out.println("6. แสดงประวัติการเปลี่ยนแปลงข้อมูลบัตรทั้งหมด");
+            System.out.println("7. แก้ไขข้อมูลบัตร");
+            System.out.println("8. ออกจากระบบ");
             System.out.print("เลือกเมนู: ");
 
             if (!scanner.hasNextInt()) {
@@ -34,36 +36,52 @@ public class Main {
 
             switch (choice) {
                 case 1:
+                    // การเพิ่มบัตร
                     System.out.print("ชื่อเจ้าของบัตร: ");
                     String name = scanner.nextLine().trim();
                     System.out.print("ประเภทบัตร (Customer / Guest / Employee / Housekeeper / Security): ");
                     String level = scanner.nextLine().trim().toLowerCase();
+                    System.out.print("วันที่เริ่มใช้ (รูปแบบ yyyy-MM-dd): ");
+                    String validFromStr = scanner.nextLine().trim();
+                    System.out.print("วันที่หมดอายุ (รูปแบบ yyyy-MM-dd): ");
+                    String validUntilStr = scanner.nextLine().trim();
 
-                    Card card = null;
-                    switch (level) {
-                        case "customer":
-                            card = new CustomerCard(name);
-                            break;
-                        case "guest":
-                            card = new GuestCard(name);
-                            break;
-                        case "employee":
-                            card = new EmployeeCard(name);
-                            break;
-                        case "housekeeper":
-                            card = new HousekeeperCard(name);
-                            break;
-                        case "security":
-                            card = new SecurityCard(name);
-                            break;
-                        default:
-                            System.out.println("ประเภทบัตรไม่ถูกต้อง!\n");
-                            continue;
+                    try {
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                        Date validFromDate = sdf.parse(validFromStr);
+                        Date validUntilDate = sdf.parse(validUntilStr);
+                        long validFrom = validFromDate.getTime();
+                        long validUntil = validUntilDate.getTime();
+
+                        Card card = null;
+                        switch (level) {
+                            case "customer":
+                                card = new CustomerCard(name, validFrom, validUntil);
+                                break;
+                            case "guest":
+                                card = new GuestCard(name, validFrom, validUntil);
+                                break;
+                            case "employee":
+                                card = new EmployeeCard(name, validFrom, validUntil);
+                                break;
+                            case "housekeeper":
+                                card = new HousekeeperCard(name, validFrom, validUntil);
+                                break;
+                            case "security":
+                                card = new SecurityCard(name, validFrom, validUntil);
+                                break;
+                            default:
+                                System.out.println("ประเภทบัตรไม่ถูกต้อง!\n");
+                                continue;
+                        }
+
+                        cardManager.addCard(card);
+                        System.out.println("เพิ่มบัตร: " + card);
+
+                    } catch (Exception e) {
+                        System.out.println("กรุณากรอกวันที่ในรูปแบบที่ถูกต้อง (yyyy-MM-dd)\n");
                     }
-                    cardManager.addCard(card);
-                    System.out.println("เพิ่มบัตร: " + card);
                     break;
-
                 case 2:
                     cardManager.listCards();
                     break;
@@ -99,7 +117,7 @@ public class Main {
                     break;
 
                 case 4:
-                    System.out.print("รหัสบัตรที่หาย: ");
+                    System.out.print("กรอกรหัสบัตรที่หาย: ");
                     String lostCardId = scanner.nextLine().trim();
                     if (cardManager.getCard(lostCardId) == null) {
                         System.out.println("ไม่พบบัตรนี้!\n");
@@ -109,14 +127,40 @@ public class Main {
                     break;
 
                 case 5:
+                    accessLogger.printAllUsage();
+                    break;
+
+                case 6:
+                    accessLogger.printAllChanges();
+                    break;
+
+                case 7:
+                    System.out.print("กรอกรหัสบัตรที่ต้องการแก้ไข: ");
+                    cardId = scanner.nextLine().trim();
+                    selectedCard = cardManager.getCard(cardId);
+
+                    if (selectedCard == null) {
+                        System.out.println("ไม่พบบัตรนี้!\n");
+                        continue;
+                    }
+
+                    System.out.print("กรุณากรอกชื่อเจ้าของบัตรใหม่: ");
+                    String newOwnerName = scanner.nextLine().trim();
+                    System.out.print("กรุณากรอกสิทธิ์การเข้าถึงใหม่ (Customer / Guest / Employee / Housekeeper / Security): ");
+                    String newAccessLevel = scanner.nextLine().trim();
+
+                    // อัพเดตข้อมูลบัตร
+                    cardManager.updateCardInfo(cardId, newOwnerName, newAccessLevel, accessLogger);
+                    break;
+
+                case 8:
                     System.out.println("\nออกจากระบบ...\n");
                     scanner.close();
                     return;
 
                 default:
-                    System.out.println("ตัวเลือกไม่ถูกต้อง! กรุณาเลือก 1-5\n");
+                    System.out.println("ตัวเลือกไม่ถูกต้อง! กรุณาเลือก 1-7\n");
             }
         }
     }
 }
-

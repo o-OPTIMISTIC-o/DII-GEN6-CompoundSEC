@@ -32,7 +32,7 @@ class SeminarRoom extends Room {
 
 class EmployeeRoom extends Room {
     public EmployeeRoom(String roomName) {
-        super(roomName, "Employee");  // แก้จาก "Staff" เป็น "Employee"
+        super(roomName, "Employee");
     }
 }
 
